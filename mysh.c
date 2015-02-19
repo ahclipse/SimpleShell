@@ -3,71 +3,106 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-int
-main(void)
-{
+int parserFunction(void){
+
   int maxLength = 1024;
   char *quitString = "exit";
-  char *tempPointer;
+  char *tempPointer;//used for counting number of arguments
+  char *path;//used for storing and checking path exists
   char *pwdString = "pwd";
+  char *cdString = "cd";
   char str[maxLength +1 ];
   char str_dup[maxLength +1];
   char **argv;//TODO 100 is temporary
   int argc;
   int i; //couter for loops;
 
-  while(1)
-  {
-    printf( "%>");
-    if ( fgets( str , maxLength , stdin ) == NULL )
-    {
-      fprintf( stderr ,"Error!\n");
-      exit(1);
-    }
-  
-    strcpy( str_dup , str );
-  
-    //count number words of input
-    i = 1;
-    tempPointer = strtok(str_dup,"\n ");
-    while( tempPointer != NULL )
-    {
-      i++; 
-      tempPointer = strtok (NULL, "\n ");
-    }
-   
-    //allocate memory for array of input
-    argv = malloc( i * sizeof(char*) );
 
-    //store String in array
-    i = 0;
-    argv[i] = strtok ( str, "\n " );
-    while( argv[i] != NULL )
-    {
-      printf ("%d\t%s.\n",i,argv[i]);
-      i++;     
-      argv[i] = strtok (NULL, "\n ");
-    }
-    argc = i;
-    printf( "#args:%d\n" , argc );
+  printf( "mysh>");
+  if ( fgets( str , maxLength , stdin ) == NULL )
+  {
+    fprintf( stderr ,"Error!\n");
+    exit(1);
+  }
+  
+  strcpy( str_dup , str );
+  
+  //count number words of input
+  i = 0;
+  tempPointer = strtok(str_dup,"\n ");
+  while( tempPointer != NULL )
+  {
+    i++; 
+    tempPointer = strtok (NULL, "\n ");
+  }
+   
+  //allocate memory for array of input
+  //TODO error checking
+  argv = malloc( i * sizeof(char*) );
+
+  //store String in array
+  i = 0;
+  argv[i] = strtok ( str, "\n " );
+  //check if nothing 
+  if(argv[i] == NULL){
+      return;
+  }
+
+  while( argv[i] != NULL )
+  {
+    printf ("%d\t%s.\n",i,argv[i]);
+    i++;     
+    argv[i] = strtok (NULL, "\n ");
+  }
+  argc = i;
+  printf( "#args:%d\n" , argc );
     
-    if( strcmp( argv[0], quitString) == 0)
-    { 
-      exit(0);
+  if( strcmp( argv[0], quitString) == 0)
+  { 
+    exit(0);
+  }
+  //Code to print out current directory when pwd is inserted
+  if( strcmp( argv[0], pwdString) == 0){ 
+    char currentDir[maxLength]; 
+    if(getcwd(currentDir, sizeof(currentDir))!= NULL){
+      printf("%s\n", currentDir); 
     }
-    //Code to print out current directory when pwd is inserted
-    if( strcmp( argv[0], pwdString) == 0){ 
-        char currentDir[maxLength]; 
-	if(getcwd(currentDir, sizeof(currentDir))!= NULL){
-	  printf("%s\n", currentDir); 
-	}
-	else{
-     	 perror("getcwd() errror");
-       	}
+    else
+    {
+      perror("getcwd() errror");
     }
+  }
+  //check for cd
+  if( strcmp( argv[0], cdString) == 0)
+  {
+    if( argc == 1 )
+    {
+      path =  getenv("HOME");
+      if( path == NULL ||  chdir(path ) == -1)
+      {
+        fprintf(stderr, "Error!" );
+      }
+    }
+    else
+    {
+      path = argv[1];
+      if( path == NULL ||  chdir(path ) == -1)
+      {
+        fprintf(stderr, "Error!" );
+      }
+    } 
+  }
 
     //free memory of last input
-    free( argv);
+  free( argv);
+}
+
+int
+main(void)
+{
+  while(1)
+  {
+    parserFunction(); 
   }
   exit(0);
 }
