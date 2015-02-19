@@ -7,8 +7,10 @@ main(void)
 {
   int maxLength = 1024;
   char *quitString = "exit";
+  char *tempPointer;
   char str[maxLength +1 ];
-  char *argv[100];//TODO 100 is temporary
+  char str_dup[maxLength +1];
+  char **argv;//TODO 100 is temporary
   int argc;
   int i; //couter for loops;
 
@@ -20,10 +22,22 @@ main(void)
       fprintf( stderr ,"Error!\n");
       exit(1);
     }
+  
+    strcpy( str_dup , str );
+  
+    //count number words of input
+    i = 1;
+    tempPointer = strtok(str_dup,"\n ");
+    while( tempPointer != NULL )
+    {
+      i++; 
+      tempPointer = strtok (NULL, "\n ");
+    }
+   
+    //allocate memory for array of input
+    argv = malloc( i * sizeof(char*) );
 
-    printf("%s\n", str);
-    
-    //TODO check for quit here?
+    //store String in array
     i = 0;
     argv[i] = strtok ( str, "\n " );
     while( argv[i] != NULL )
@@ -39,6 +53,9 @@ main(void)
     { 
       exit(0);
     }
+
+    //free memory of last input
+    free( argv);
   }
   exit(0);
 }
