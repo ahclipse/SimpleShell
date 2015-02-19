@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 int
 main(void)
@@ -8,6 +9,7 @@ main(void)
   int maxLength = 1024;
   char *quitString = "exit";
   char *tempPointer;
+  char *pwdString = "pwd";
   char str[maxLength +1 ];
   char str_dup[maxLength +1];
   char **argv;//TODO 100 is temporary
@@ -52,6 +54,16 @@ main(void)
     if( strcmp( argv[0], quitString) == 0)
     { 
       exit(0);
+    }
+    //Code to print out current directory when pwd is inserted
+    if( strcmp( argv[0], pwdString) == 0){ 
+        char currentDir[maxLength]; 
+	if(getcwd(currentDir, sizeof(currentDir))!= NULL){
+	  printf("%s\n", currentDir); 
+	}
+	else{
+     	 perror("getcwd() errror");
+       	}
     }
 
     //free memory of last input
