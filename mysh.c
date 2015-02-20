@@ -11,14 +11,14 @@ int parserFunction(void){
   char *path;//used for storing and checking path exists
   char *pwdString = "pwd";
   char *cdString = "cd";
-  char str[maxLength +1 ];
-  char str_dup[maxLength +1];
+  char str[maxLength];
+  char str_dup[maxLength];
   char **argv;
   int argc;
   int i; //couter for loops;
 
 
-  printf( "mysh>");
+  printf( "mysh>  ");
   if ( fgets( str , maxLength , stdin ) == NULL )
   {
     fprintf( stderr ,"Error!\n");
@@ -35,9 +35,9 @@ int parserFunction(void){
     i++; 
     tempPointer = strtok (NULL, "\n ");
   }
-   
+  argc = i; 
   //allocate memory for array of input
-  argv = malloc( i * sizeof(char*) );
+  argv = malloc( (argc+1) * sizeof(char*) );//plus one to account for the final NULL arg
   //error checking
   if( argv == NULL){
     fprintf( stderr ,"Error!\n");
@@ -50,7 +50,7 @@ int parserFunction(void){
   //check if nothing 
   if(argv[i] == NULL){
       free( argv );
-      return;//nothing in command line
+      return;//nothing in command line, restart shell prompt
   }
 
   while( argv[i] != NULL )
@@ -59,9 +59,12 @@ int parserFunction(void){
     i++;     
     argv[i] = strtok (NULL, "\n ");
   }
-  argc = i;
+  argv[i+1] = NULL;//last arg should be NULL as stated in project files
   printf( "#args:%d\n" , argc );
-    
+
+
+//******************BUILT IN FUNCTIONALITY************ //
+  //check for quit string, exits if user enters "exit" as first argument, other arguments are ignored
   if( strcmp( argv[0], quitString) == 0)
   { 
     exit(0);
