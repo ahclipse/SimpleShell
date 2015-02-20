@@ -13,7 +13,7 @@ int parserFunction(void){
   char *cdString = "cd";
   char str[maxLength +1 ];
   char str_dup[maxLength +1];
-  char **argv;//TODO 100 is temporary
+  char **argv;
   int argc;
   int i; //couter for loops;
 
@@ -37,15 +37,20 @@ int parserFunction(void){
   }
    
   //allocate memory for array of input
-  //TODO error checking
   argv = malloc( i * sizeof(char*) );
+  //error checking
+  if( argv == NULL){
+    fprintf( stderr ,"Error!\n");
+    exit(1);
+  }
 
   //store String in array
   i = 0;
   argv[i] = strtok ( str, "\n " );
   //check if nothing 
   if(argv[i] == NULL){
-      return;
+      free( argv );
+      return;//nothing in command line
   }
 
   while( argv[i] != NULL )
