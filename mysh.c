@@ -128,12 +128,11 @@ int mysh(void){
           if(  strcmp( argv[i] ,">>" ) == 0 )
           {
 	    printf(">>");
-            out = open( argv[i+1], O_APPEND | O_CREAT | O_WRONLY); 
-            if(out <  0) printf("open has failed\n"); return -1;
+            out = open( argv[i+1], O_APPEND | O_CREAT | O_WRONLY, 0666); 
           }
           if(  strcmp( argv[i] ,">" ) == 0 )
           {
-            out = open( argv[i+1], O_TRUNC | O_CREAT | O_WRONLY); 
+            out = open( argv[i+1], O_TRUNC | O_CREAT | O_WRONLY, 0666); 
           }
 
           if ( out == -1)
@@ -142,7 +141,7 @@ int mysh(void){
             return -1;
           }
 
-          if( dup2( out, 1 ) <  0)//1 means stdout????
+          if( dup2( out, 1 ) ==  -1)//1 means stdout????
           {
             printf("dup has failed\n");
             return -1;
@@ -161,9 +160,7 @@ int mysh(void){
           argv = sub_argv;//to keep naming in rest of the code the same
         }
         i++;       
-	}
-
-      printf("GOT TO THE POINT OF FORK AND EXECT");   
+      }
       if( execvp( argv[0], argv) == -1)
       { 
         fprintf(stderr, "Error!\n" );
