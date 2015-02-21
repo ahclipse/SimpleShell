@@ -2,8 +2,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
-int parserFunction(void){
+void parserFunction(void){
 
   int maxLength = 1024;
   char *quitString = "exit";
@@ -15,6 +17,8 @@ int parserFunction(void){
   char str_dup[maxLength];
   char **argv;
   int argc;
+  int pid;
+  int status;//TODO error checking
   int i; //couter for loops;
 
 
@@ -55,12 +59,10 @@ int parserFunction(void){
 
   while( argv[i] != NULL )
   {
-    printf ("%d\t%s.\n",i,argv[i]);
     i++;     
     argv[i] = strtok (NULL, "\n ");
   }
   argv[i+1] = NULL;//last arg should be NULL as stated in project files
-  printf( "#args:%d\n" , argc );
 
 
 //******************BUILT IN FUNCTIONALITY************ //
@@ -77,7 +79,8 @@ int parserFunction(void){
     }
     else
     {
-      perror("getcwd() errror");
+      fprintf(stderr, "Error!\n");
+      return;
     }
   }
   //check for cd
@@ -88,7 +91,8 @@ int parserFunction(void){
       path =  getenv("HOME");
       if( path == NULL ||  chdir(path ) == -1)
       {
-        fprintf(stderr, "Error!" );
+        fprintf(stderr, "Error!\n" );
+        return;
       }
     }
     else
@@ -96,12 +100,41 @@ int parserFunction(void){
       path = argv[1];
       if( path == NULL ||  chdir(path ) == -1)
       {
-        fprintf(stderr, "Error!" );
+        fprintf(stderr, "Error!\n" );
+        return;
       }
     } 
   }
-
-    //free memory of last input
+ 
+  if( (pid = fork()) == -1)
+  {
+    fprintf(stderr, "Error!\n" );
+    return;
+  }
+  else
+  {
+    if( pid == 0)
+    {
+      if( execvp( argv[0], argv) == -1)
+      {
+        fprintf(stderr, "Error!\n" );
+        return;
+      }
+    }
+    else
+    {
+      if( waitpid( pid, &status, 0) == -1)
+      {
+        fprintf(stderr, "Error!\n" );
+        return;
+      }
+      else
+      {
+        return;
+      }
+    }
+  }
+ //free memory of last input
   free( argv);
 }
 
