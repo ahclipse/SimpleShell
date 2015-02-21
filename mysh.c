@@ -13,7 +13,7 @@ int sub_array(int totalElm, int startIndex, int endIndex, char*** array)
   char **sub_arr;
   int copyNum;//number of elements to be compied
 
-  if( endIndex <= startIndex || totalElm < endIndex)
+  if( endIndex <= startIndex || totalElm+1 < endIndex)//plus one to get final elemnt exclusivity
   {
     return -1;
   }
@@ -26,7 +26,8 @@ int sub_array(int totalElm, int startIndex, int endIndex, char*** array)
     printf("made it here\n");
     return -1;
   }
-  memcpy( sub_arr, ((char *)(*array + startIndex * sizeof(char*))), copyNum * sizeof(char*) );
+  memcpy( sub_arr, ((char *)(*array + startIndex )), copyNum * sizeof(char*) );
+  printf( "%s", sub_arr[0]);
   sub_arr[copyNum + 1] = NULL;
   free(*array);
   *array = sub_arr;
@@ -200,7 +201,17 @@ int mysh(void)
       free( argv );
       return -1;
     }
-    //TODO exec events after directory change
+    if( argc > 2)
+    { 
+      if( -1 == (argc = sub_array( argc, 2 , argc , &argv)))
+      {
+        return -1;
+      }
+      if( execute(argc , argv) == -1)
+      {
+        return -1;
+      }
+    }
   }
   else if( execute( argc, argv) == -1)
   {
