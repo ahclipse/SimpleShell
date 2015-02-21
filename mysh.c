@@ -5,7 +5,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-void parserFunction(void){
+int mysh(void){
 
   int maxLength = 1024;
   char *quitString = "exit";
@@ -25,8 +25,7 @@ void parserFunction(void){
   printf( "mysh>  ");
   if ( fgets( str , maxLength , stdin ) == NULL )
   {
-    fprintf( stderr ,"Error!\n");
-    exit(1);
+   return -1;
   }
   
   strcpy( str_dup , str );
@@ -44,8 +43,7 @@ void parserFunction(void){
   argv = malloc( (argc+1) * sizeof(char*) );//plus one to account for the final NULL arg
   //error checking
   if( argv == NULL){
-    fprintf( stderr ,"Error!\n");
-    exit(1);
+    return -1;
   }
 
   //store String in array
@@ -54,7 +52,7 @@ void parserFunction(void){
   //check if nothing 
   if(argv[i] == NULL){
       free( argv );
-      return;//nothing in command line, restart shell prompt
+      return 0;//nothing in command line, restart shell prompt
   }
 
   while( argv[i] != NULL )
@@ -79,8 +77,7 @@ void parserFunction(void){
     }
     else
     {
-      fprintf(stderr, "Error!\n");
-      return;
+      return -1;
     }
   }
   //check for cd
@@ -91,8 +88,7 @@ void parserFunction(void){
       path =  getenv("HOME");
       if( path == NULL ||  chdir(path ) == -1)
       {
-        fprintf(stderr, "Error!\n" );
-        return;
+        return -1;
       }
     }
     else
@@ -100,16 +96,14 @@ void parserFunction(void){
       path = argv[1];
       if( path == NULL ||  chdir(path ) == -1)
       {
-        fprintf(stderr, "Error!\n" );
-        return;
+        return -1;
       }
     } 
   }
  
   if( (pid = fork()) == -1)
   {
-    fprintf(stderr, "Error!\n" );
-    return;
+    return -1;
   }
   else
   {
@@ -117,20 +111,18 @@ void parserFunction(void){
     {
       if( execvp( argv[0], argv) == -1)
       {
-        fprintf(stderr, "Error!\n" );
-        return;
+        return -1;
       }
     }
     else
     {
       if( waitpid( pid, &status, 0) == -1)
       {
-        fprintf(stderr, "Error!\n" );
-        return;
+       return -1;
       }
       else
       {
-        return;
+        return 0;
       }
     }
   }
@@ -143,7 +135,10 @@ main(void)
 {
   while(1)
   {
-    parserFunction(); 
+    if( mysh() == -1 )
+    {
+      fprintf(stderr, "Error!\n" );
+    } 
   }
   exit(0);
 }
