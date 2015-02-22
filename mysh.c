@@ -21,16 +21,19 @@ int sub_array(int totalElm, int startIndex, int endIndex, char*** array)
   copyNum = endIndex - startIndex ;
 
   //+1 for NULL at end
-  if( (sub_arr = malloc( (copyNum + 1) * sizeof(char*))) == NULL)//take away null 1 so space for NULL
+  if( ((sub_arr) = malloc( (copyNum + 2) * sizeof(char*))) == NULL)//take away null 1 so space for NULL
   {
-    printf("made it here\n");
     return -1;
   }
   memcpy( sub_arr, ((char *)(*array + startIndex )), copyNum * sizeof(char*) );
   sub_arr[copyNum + 1] = NULL;
-  printf("made it here\n");
   free(*array);
-  *array = sub_arr;
+  int i;
+  for( i = 0; i < copyNum ; i ++)
+  {
+    //printf("subAR %d\t%s\n",i,sub_arr[i]);
+  }
+  (*array) = sub_arr;
   return copyNum;
 }
 
@@ -56,7 +59,6 @@ int execute( int argc, char **argv)
 		  //change stdout to newfile
 		  if(  strcmp( argv[i] ,">>" ) == 0 )
 		  {
-			  printf(">>");
 			  out = open( argv[i+1], O_APPEND | O_CREAT | O_WRONLY, 0666); 
 		  }
 		  if(  strcmp( argv[i] ,">" ) == 0 )
@@ -84,7 +86,7 @@ int execute( int argc, char **argv)
      }
     i++;       
   }
-
+  //for( i = 0 ; i < argc ; i++){ printf("%d\t%s\n",i,argv[i]);}
   if( execvp( argv[0], argv) == -1)
   { 
 	  fprintf(stderr, "Error!\n" );
@@ -158,7 +160,7 @@ int mysh(void)
    if(getcwd(currentDir, sizeof(currentDir))!= NULL){
     printf("%s\n", currentDir); 
     return 0;
-    }
+   }
     else
     {
       return -1;
@@ -191,8 +193,6 @@ int mysh(void)
       return -1;
     }
   }
-
-   printf( "made it before\n");
 
   //Pipes
   int pipe1[2];
@@ -230,7 +230,8 @@ int mysh(void)
           dup2(pipe2[1],1);
         }
         argc = sub_array( argc , 0 , i , &argv);
-        execute( sub_argc, sub_argv);
+        //for( i = 0 ; i < argc ; i ++){  fprintf(stderr, "pipe1 args:%d\t%s\n",i,argv[i]);}
+        execute( argc, argv);
         return -1;
       }
 
@@ -242,22 +243,21 @@ int mysh(void)
     i ++;
   }
 
-
-  printf( "made it through\n");
   //right side of pipe
   if( (pids[2] = fork()) == 0 )
   {
     if(pipesFound == 1)
     {
-      close(pipe1[0]);
-      dup2( pipe1[1], 0);
+      close(pipe1[1]);
+      dup2( pipe1[0], 0);
     } 
     if(pipesFound == 2)
     {
-      close(pipe2[0]);
-      dup2( pipe2[1], 0);
+      close(pipe2[1]);
+      dup2( pipe2[0], 0);
     }
-
+    //for( i = 0 ; i < argc ; i++){ printf("%s\n",argv[i]);}
+    //for( i = 0 ; i < argc ; i ++){  fprintf(stderr, "pipe2 args:%d\t%s\n",i,argv[i]);}
     execute( argc, argv);
   }
 
