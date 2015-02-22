@@ -31,7 +31,7 @@ int sub_array(int totalElm, int startIndex, int endIndex, char*** array)
   int i;
   for( i = 0; i < copyNum ; i ++)
   {
-    //printf("subAR %d\t%s\n",i,sub_arr[i]);
+    //fprintf(stderr,"%dsubAR %d\t%s\n",totalElm,i,sub_arr[i]);
   }
   (*array) = sub_arr;
   return copyNum;
@@ -236,6 +236,7 @@ int mysh(void)
       }
 
       argc = sub_array( argc , i+1, argc , &argv);
+      //for( i = 0 ; i < argc ; i ++){  fprintf(stderr, "pipe1 args:%d\t%s\n",i,argv[i]);}
       i = 0;
       pipesFound++;
       
@@ -253,6 +254,8 @@ int mysh(void)
     } 
     if(pipesFound == 2)
     {
+      close(pipe1[0]);
+      close(pipe1[1]);
       close(pipe2[1]);
       dup2( pipe2[0], 0);
     }
