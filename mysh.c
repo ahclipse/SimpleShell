@@ -28,6 +28,7 @@ int sub_array(int totalElm, int startIndex, int endIndex, char*** array)
   }
   memcpy( sub_arr, ((char *)(*array + startIndex )), copyNum * sizeof(char*) );
   sub_arr[copyNum + 1] = NULL;
+  printf("made it here\n");
   free(*array);
   *array = sub_arr;
   return copyNum;
@@ -35,11 +36,9 @@ int sub_array(int totalElm, int startIndex, int endIndex, char*** array)
 
 int execute( int argc, char **argv)
 {
-  int pid;
   int redirectNotFound;
   int out;
   int i;
-  int status;
   //begin exec function
   i = 0;
   redirectNotFound = 1;
@@ -107,7 +106,6 @@ int mysh(void)
   char **argv;;
   char currentDir[maxLength]; 
   int argc;
-  int pid;
   int status;
   int i; //couter for loops;
 
@@ -194,31 +192,112 @@ int mysh(void)
     }
   }
 
-  if( (pid = fork()) == -1)
+   printf( "made it before\n");
+
+  //Pipes
+  int pipe1[2];
+  int pipe2[2];
+  int pids[3];
+  int sub_argc;
+  char **sub_argv;  
+
+  i = 0;
+  int pipesFound = 0;
+  while( i < argc && pipesFound < 2)  
   {
+    if( strcmp( argv[i] ,"|\0" ) == 0 )
+    {
+      if( pipesFound == 0)
+      {
+        pipe(pipe1);
+      }
+      if( pipesFound == 1)
+      {
+        pipe(pipe2);
+      }
+
+      if( !(pids[pipesFound] = fork()) )
+      {
+        if( pipesFound == 0){
+          close(pipe1[0]);    
+          dup2( pipe1[1], 1);
+        }
+        else
+        {
+          close( pipe1[1]);
+          close( pipe2[0]);
+          dup2(pipe1[0], 0);
+          dup2(pipe2[1],1);
+        }
+        argc = sub_array( argc , 0 , i , &argv);
+        execute( sub_argc, sub_argv);
+        return -1;
+      }
+
+      argc = sub_array( argc , i+1, argc , &argv);
+      i = 0;
+      pipesFound++;
+      
+    }
+    i ++;
+  }
+
+
+  printf( "made it through\n");
+  //right side of pipe
+  if( (pids[2] = fork()) == 0 )
+  {
+    if(pipesFound == 1)
+    {
+      close(pipe1[0]);
+      dup2( pipe1[1], 0);
+    } 
+    if(pipesFound == 2)
+    {
+      close(pipe2[0]);
+      dup2( pipe2[1], 0);
+    }
+
+    execute( argc, argv);
+  }
+
+  if( pipesFound > 0)
+  {
+    close(pipe1[0]);
+    close(pipe1[1]);
+    if( pipesFound > 1)
+    {
+      close(pipe2[0]);
+      close(pipe2[1]);
+    }
+  }
+
+  //parent
+  if( waitpid( pids[2], &status, 0) == -1)
+  {
+    free( argv );
     return -1;
   }
-  else
-  {
-    if( pid == 0)
-    {       
-      if( execute( argc, argv) == -1)
-      {
-        return -1;
-       }
 
-     }
-     else
-     {
-        if( waitpid( pid, &status, 0) == -1)
-        {
-          free( argv );
-          return -1;
-        }
-     } 
- //free memory of last input
-    free( argv);
-  }
+  if( pipesFound > 0)
+  {
+    if( waitpid( pids[0], &status, 0) == -1)
+    {
+      free( argv );
+      return -1;
+    }
+    
+    if( pipesFound > 1)
+    {
+      if( waitpid( pids[1], &status, 0) == -1)
+      {
+        free( argv );
+        return -1;
+      }
+    }
+  } 
+  free( argv);
+  
   return 0;
 }
 
