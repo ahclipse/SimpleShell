@@ -63,7 +63,7 @@ int execute( int argc, char **argv)
 		  }
 		  if(  strcmp( argv[i] ,">" ) == 0 )
 		  {
-			  out = open( argv[i+1], O_TRUNC | O_CREAT | O_WRONLY, 0666); 
+			 out = open( argv[i+1], O_TRUNC | O_CREAT | O_WRONLY, 0666); 
 		  }
 
 		  if ( out == -1)
@@ -197,13 +197,12 @@ int mysh(void)
   //Pipes
   int pipe1[2];
   int pipe2[2];
-  int pids[3];
-  int sub_argc;
-  char **sub_argv;  
-
+  int pids[3];  
   i = 0;
   int pipesFound = 0;
-  while( i < argc && pipesFound < 2)  
+  int teeNotFound = 1; 
+
+  while( i < argc && pipesFound < 2 && teeNotFound)  
   {
     if( strcmp( argv[i] ,"|\0" ) == 0 )
     {
@@ -241,8 +240,45 @@ int mysh(void)
       pipesFound++;
       
     }
+    if( strcmp( argv[i] ,"%\0" ) == 0 )
+    {
+        //Protect Against bad input 
+        if(pipesFound > 0){
+         free(argv);
+         return -1;
+        } 
+	teeNotFound = 0;
+        pipe(pipe1); 
+	pipe(pipe2); 
+        char *myTee[] = {"mytee", NULL}; 
+        int j;
+	for(j = 0; j < 2; j++)
+        {
+          if( !(pids[j] = fork()) )
+          {
+               if( j == 0)
+               {
+	      	 argc = sub_array( argc , 0 , i , &argv);
+                 close(pipe1[0]);
+	      	 dup2( pipe1[1], 1);
+                 execute( argc, argv);
+                 return -1;
+	       }
+	       else
+	       {   
+                 close( pipe1[1]);
+                 close( pipe2[0]);
+                 dup2(pipe1[0], 0);
+                 dup2(pipe2[1],1);
+		 execvp( "mytee", myTee);  
+               }
+           }
+	 argc = sub_array( argc , i+1, argc , &argv);
+	}
+      pipesFound = 2; 
+    }
     i ++;
-  }
+  } 
 
   //right side of pipe
   if( (pids[2] = fork()) == 0 )
